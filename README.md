@@ -1,72 +1,57 @@
 # GlobeTrotter - Premium Travel Planning
 
-GlobeTrotter is a modern, feature-rich travel planning application built with Flask, designed for explorers who want a seamless and visually stunning experience. It features a premium Glassmorphism design system, AI-powered recommendations, and advanced budget tracking.
+GlobeTrotter is a modern, feature-rich travel planning application built with Flask. It features a premium Glassmorphism design system, AI-powered recommendations, and advanced budget tracking.
 
-## 🌟 Features Overview
+## 🌟 Key Features
 
-The application implements the following core features as defined in the project scope:
+- **🔐 Authentication**: Secure login/signup with session management
+- **🏠 Dashboard**: Central hub with trip calendar, top destinations, and quick access
+- **✈️ Trip Management**: Create, edit, and organize trips with stops and activities
+- **🗺️ Itinerary Builder**: Visual timeline with drag-and-drop stop management
+- **🎭 AI-Powered Activities**: Get activity suggestions using Tavily API
+- **💰 Budget Tracking**: Track estimated vs actual costs with visual analytics
+- **🤝 Community**: Browse and clone public trips shared by other travelers
+- **👤 User Profiles**: Personalize your account and manage settings
+- **🛡️ Admin Dashboard**: User and trip management for administrators
 
-### 1. 🔐 Login / Signup
-- **Secure Authentication**: Robust system for user registration and login.
-- **Session Management**: Secure session handling with Flask-Login.
-- **Form Validation**: Real-time feedback and server-side validation.
+## 📸 Screenshots
 
-### 2. 🏠 Dashboard / Home Screen
-- **Central Hub**: Immediate access to upcoming trips and recent activity.
-- **Inspiration**: "Top Places" section dynamically fetched to inspire your next journey.
-- **Quick Actions**: One-click access to start planning a new trip.
+### Login Page
+![Login Page](screenshots/login.png)
+Clean and modern login interface with secure authentication.
 
-### 3. ✈️ Create Trip
-- **Intuitive Wizard**: Simple 3-step process to define trip name, dates, and description.
-- **Visuals**: Add cover photos to personalize your trip cards.
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+Central hub showing trip calendar, top destinations, and your itineraries at a glance.
 
-### 4. 📂 My Trips (Trip List)
-- **Organized Grid**: View all your trips in a responsive grid layout.
-- **Quick Stats**: See destination count, dates, and privacy status at a glance.
-- **Management**: Easy access to Edit, View, or Delete trips.
+### My Trips
+![My Trips](screenshots/my-trips.png)
+View and manage all your trips with quick access to edit, view, or delete options.
 
-### 5. 🗺️ Itinerary Builder
-- **Deep Hierarchical Structure**: Trip -> Stops -> Activities.
-- **Drag & Drop**: Reorder stops to optimize your route.
-- **Stop Management**: Add cities, dates, and notes for each stop.
+### Community
+![Community](screenshots/community.png)
+Browse public trips shared by other travelers and clone them to your own dashboard.
 
-### 6. 📅 Itinerary View (Timeline)
-- **Visual Timeline**: Vertical timeline view to visualize the flow of your journey.
-- **Day-by-Day**: Clear breakdown of activities per day.
-- **Interactive**: Click to expand details or edit items directly.
+### Trip View
+![Trip View](screenshots/trip-view.png)
+Detailed trip view with timeline, activities, and AI-powered suggestions for each stop.
 
-### 7. 🏙️ City Search (Destinations)
-- **Integrated Discovery**: Search for cities to add to your itinerary.
-- **Smart suggestions**: Auto-complete and popular destination recommendations.
+### Budget Management
+![Budget](screenshots/budget.png)
+Track your trip expenses with detailed budget allocation and visual analytics showing spending by category.
 
-### 8. 🎭 Activity Search (AI Powered)
-- **AI Recommendation Engine**: "AI Ideas" button fetches activity suggestions (Sightseeing, Food, Adventure) using the **Tavily API**.
-- **One-Click Add**: Instantly add suggested activities to your plan.
+### Admin Dashboard - Overview
+![Admin Overview](screenshots/admin-overview.png)
+Platform metrics including total users, trips created, destinations, and financial summaries.
 
-### 9. 💰 Trip Budget & Cost Breakdown
-- **Financial Tracking**: Track Estimated vs. Actual costs for every item.
-- **Visual Analytics**: Interactive charts showing spending distribution by category (Transport, Stay, Food, etc.).
-- **Currency Support**: Input costs in any currency (normalized to USD for display).
+### Admin Dashboard - Management
+![Admin Management](screenshots/admin-management.png)
+User and trip management interface for administrators to oversee the platform.
 
-### 10. 🗓️ Trip Calendar
-- **Visual Strips**: Trips are displayed as continuous colored strips on a monthly calendar.
-- **Planning Aid**: Quickly identify overlapping trips or free weekends.
+## 🎥 Demo
 
-### 11. 🤝 Shared / Public Itinerary (Community)
-- **Community Feed**: Browse trips shared by other users.
-- **Privacy Controls**: Toggle trips between **Public** and **Private**.
-- **Trip Cloning**: "Copy" any public trip to your own dashboard to use as a template.
-
-### 12. 👤 User Profile
-- **Personalization**: Update profile details and view account statistics.
-- **Account Management**: Securely manage your account settings.
-
-### 13. 🛡️ Admin Dashboard
-- **User Management**: View and manage distinct users.
-- **Trip Oversight**: Admin overview of all trips on the platform.
-- **Strict Access**: Protected by specific credentials (`Admin@globe` / `admin123`).
-
----
+Watch the full demo and explore all features:
+**[View Demo on Google Drive](https://drive.google.com/drive/folders/12juQxl_cOdOdxzAi4sSRn0iAyNXvayfX?usp=share_link)**
 
 ## 🛠️ Technology Stack
 
@@ -76,31 +61,13 @@ The application implements the following core features as defined in the project
 - **APIs**: Tavily API (for Travel Recommendations)
 - **Visualization**: Chart.js
 
----
-
-## 🗄️ Database Schema
-
-The application uses a relational SQLite database managed via SQLAlchemy ORM.
-
-1.  **User**: Stores auth details, admin status (`is_admin`), and profile info.
-    *   *One-to-Many* -> Trips
-2.  **Trip**: Core entity containing title, dates, privacy status (`is_public`), and cover photo.
-    *   *One-to-Many* -> Stops
-    *   *One-to-Many* -> Budget Items
-3.  **Stop**: Represents a destination (City/Country) within a trip. Includes `order_index` for correct sequencing.
-    *   *One-to-Many* -> Activities
-4.  **Activity**: Specific events (Sightseeing, Food, etc.) at a stop.
-5.  **Budget**: Tracks financial data per category for a trip.
-
----
-
 ## 🚀 Quick Start
 
-### 1. Prerequisites
+### Prerequisites
 - Python 3.8+
 - `pip` package manager
 
-### 2. Installation
+### Installation
 ```bash
 # Clone the repository
 git clone https://github.com/your-repo/globetrotter.git
@@ -110,36 +77,33 @@ cd globetrotter
 pip install -r requirements.txt
 ```
 
-### 3. Configuration
+### Configuration
 Ensure you have a `config.py` file (or set env vars) with:
 ```python
 SECRET_KEY = 'your-secret-key'
 TAVILY_API_KEY = 'your-tavily-api-key'
 ```
 
-### 4. Database Setup
+### Database Setup
 The app will automatically create the DB on first run. To seed initial data (including the Admin account):
 ```bash
 python seed_data.py
 ```
 
-### 5. Run the Application
+### Run the Application
 ```bash
 python run.py
 ```
 Visit [http://localhost:5001](http://localhost:5001) in your browser.
 
----
-
 ## 🔒 Security Features
-- **Strict Admin Access**: Admin routes are protected by a custom decorator ensuring only `Admin@globe` has access.
-- **CSRF Protection**: Flask-WTF integration.
-- **Route Guards**: `login_required` decorators on all sensitive endpoints.
-- **Data Validation**: Input sanitization on forms.
 
----
+- **Strict Admin Access**: Admin routes protected by custom decorator
+- **CSRF Protection**: Flask-WTF integration
+- **Route Guards**: `login_required` decorators on sensitive endpoints
+- **Data Validation**: Input sanitization on forms
 
-## 📂 Architecture
+## 📂 Project Structure
 
 ```
 globetrotter/
@@ -154,7 +118,6 @@ globetrotter/
 └── run.py               # Application Entry Point
 ```
 
----
-
 ## 📜 License
+
 MIT License - Created for the Odoo Hackathon 2026.
