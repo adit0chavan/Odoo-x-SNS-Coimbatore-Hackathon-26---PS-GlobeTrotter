@@ -17,35 +17,35 @@ GlobeTrotter is a modern, feature-rich travel planning application built with Fl
 ## 📸 Screenshots
 
 ### Login Page
-![Login Page](screenshots/login.png)
+![Login Page](screenshots/loginpage.jpeg)
 Clean and modern login interface with secure authentication.
 
 ### Dashboard
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](screenshots/dashboard.jpeg)
 Central hub showing trip calendar, top destinations, and your itineraries at a glance.
 
 ### My Trips
-![My Trips](screenshots/my-trips.png)
+![My Trips](screenshots/My%20trips.jpeg)
 View and manage all your trips with quick access to edit, view, or delete options.
 
 ### Community
-![Community](screenshots/community.png)
+![Community](screenshots/community.jpeg)
 Browse public trips shared by other travelers and clone them to your own dashboard.
 
-### Trip View
-![Trip View](screenshots/trip-view.png)
+### Trip Planner
+![Trip Planner](screenshots/trip%20planner.jpeg)
 Detailed trip view with timeline, activities, and AI-powered suggestions for each stop.
 
-### Budget Management
-![Budget](screenshots/budget.png)
+### Budget Planner
+![Budget Planner](screenshots/Budget%20planer.jpeg)
 Track your trip expenses with detailed budget allocation and visual analytics showing spending by category.
 
 ### Admin Dashboard - Overview
-![Admin Overview](screenshots/admin-overview.png)
+![Admin Overview](screenshots/admin%20overview.jpeg)
 Platform metrics including total users, trips created, destinations, and financial summaries.
 
 ### Admin Dashboard - Management
-![Admin Management](screenshots/admin-management.png)
+![Admin Dashboard](screenshots/Admin%20dashboard.jpeg)
 User and trip management interface for administrators to oversee the platform.
 
 ## 🎥 Demo
