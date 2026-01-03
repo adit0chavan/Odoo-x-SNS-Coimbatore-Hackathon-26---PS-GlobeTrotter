@@ -142,10 +142,14 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ctx = document.getElementById('budgetChart').getContext('2d');
-        const labels = [{% for item in trip.budget_items %}"{{ item.category }}", {% endfor %}];
-    const data = [{% for item in trip.budget_items %}{ { item.estimated_amount } }, {% endfor %}];
+        const labels = {{ chart_labels | tojson
+    }};
+    const data = {{ chart_data | tojson }};
 
-    if (labels.length > 0) {
+    // Check if there is any non-zero data
+    const total = data.reduce((a, b) => a + b, 0);
+
+    if (total > 0 && labels.length > 0) {
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -164,6 +168,10 @@
                 }
             }
         });
+    } else {
+        // Render a placeholder or empty state
+        const container = document.getElementById('budgetChart').parentElement;
+        container.innerHTML = '<div class="d-flex align-center justify-center h-100 text-gray text-center p-4"><p>Set your estimated budget to see the breakdown.</p></div>';
     }
     });
 </script>

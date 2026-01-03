@@ -32,13 +32,19 @@ def dashboard():
     # Get all trips for management
     all_trips = Trip.query.order_by(Trip.created_at.desc()).all()
     
+    # Calculate Financials
+    total_estimated_budget = sum(t.get_total_budget() for t in all_trips)
+    total_actual_spend = sum(t.get_total_actual_cost() for t in all_trips)
+    
     return render_template('admin/dashboard.html', 
                            total_users=total_users, 
                            total_trips=total_trips, 
                            total_stops=total_stops,
                            recent_users=recent_users,
                            all_users=all_users,
-                           all_trips=all_trips)
+                           all_trips=all_trips,
+                           total_estimated_budget=total_estimated_budget,
+                           total_actual_spend=total_actual_spend)
 
 
 

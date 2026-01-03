@@ -165,7 +165,11 @@ def manage_budget(trip_id):
         flash('Budget updated successfully!', 'success')
         return redirect(url_for('trips.view_trip', trip_id=trip.id))
     
-    return render_template('trips/budget.html', trip=trip)
+    # Prepare chart data
+    chart_labels = [item.category for item in trip.budget_items]
+    chart_data = [item.estimated_amount or 0 for item in trip.budget_items]
+    
+    return render_template('trips/budget.html', trip=trip, chart_labels=chart_labels, chart_data=chart_data)
 
 @bp.route('/trips/shared/<int:trip_id>')
 def share_trip(trip_id):

@@ -39,7 +39,9 @@ with app.app_context():
     db.session.commit()
     
     # Create a trip for explorer if none
-    if not Trip.query.filter_by(user_id=user.id).first():
+    existing_trip = Trip.query.filter_by(user_id=user.id).first()
+    
+    if not existing_trip:
         trip = Trip(
             user_id=user.id,
             name="European Summer",
@@ -57,6 +59,33 @@ with app.app_context():
         stop2 = Stop(trip_id=trip.id, city='Paris', country='France', arrival_date=datetime.utcnow() + timedelta(days=4), departure_date=datetime.utcnow() + timedelta(days=7))
         db.session.add(stop1)
         db.session.add(stop2)
+        db.session.commit()
+    else:
+        trip = existing_trip
+
+    # Ensure budget items exist for the trip (whether new or existing)
+    if not trip.budget_items:
+        print("Patching missing budget items for trip...")
+        categories = ['Transport', 'Accommodation', 'Food', 'Activities', 'Shopping', 'Other']
+        for category in categories:
+            # Initialize with 0 as requested ("no default budget")
+            budget = Budget(trip_id=trip.id, category=category, estimated_amount=0, actual_amount=0)
+            db.session.add(budget)
+        db.session.commit()
+        print("Budget items added.")
+        
+        # Add default budget items
+        categories = ['Transport', 'Accommodation', 'Food', 'Activities', 'Shopping', 'Other']
+        for category in categories:
+            # Add some dummy data for the seeded trip
+            est = 0
+            if category == 'Transport': est = 1500
+            elif category == 'Accommodation': est = 2000
+            elif category == 'Food': est = 800
+            elif category == 'Activities': est = 500
+            
+            budget = Budget(trip_id=trip.id, category=category, estimated_amount=est, actual_amount=0)
+            db.session.add(budget)
         db.session.commit()
         
         print("Created sample trip")

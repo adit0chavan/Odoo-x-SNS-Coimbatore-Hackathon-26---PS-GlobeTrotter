@@ -88,6 +88,28 @@
                 <h3 class="h2 mb-0">{{ total_stops }}</h3>
                 <p class="text-gray text-sm">Total Destinations</p>
             </div>
+
+            <div class="card stat-card p-6">
+                <div class="d-flex justify-between align-start mb-4">
+                    <div class="stat-icon primary">
+                        <span class="icon">account_balance</span>
+                    </div>
+                    <span class="badge badge-primary">Financials</span>
+                </div>
+                <h3 class="h2 mb-0">${{ "%.2f"|format(total_estimated_budget) }}</h3>
+                <p class="text-gray text-sm">Total Planned Budget</p>
+            </div>
+
+            <div class="card stat-card p-6">
+                <div class="d-flex justify-between align-start mb-4">
+                    <div class="stat-icon secondary">
+                        <span class="icon">payments</span>
+                    </div>
+                    <span class="badge badge-success">Actual</span>
+                </div>
+                <h3 class="h2 mb-0">${{ "%.2f"|format(total_actual_spend) }}</h3>
+                <p class="text-gray text-sm">Total Platform Spend</p>
+            </div>
         </div>
 
         <!-- Users Section -->
