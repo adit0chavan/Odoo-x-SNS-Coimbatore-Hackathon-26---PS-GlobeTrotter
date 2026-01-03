@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Budget - {{ trip.name }}{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="d-flex justify-between align-center mb-8">
+        <div>
+            <h1 class="h2 mb-2">Budget Analysis</h1>
+            <p class="text-gray">Financial overview for {{ trip.name }}</p>
+        </div>
+        <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-outline">
+            <span class="icon">arrow_back</span> Back to Trip
+        </a>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="card stat-card p-6 border-left-primary">
+            <div class="d-flex justify-between align-start mb-2">
+                <p class="text-xs text-uppercase text-gray fw-bold">Projected Budget</p>
+                <div class="icon-circle bg-primary-light text-primary"><span class="icon">account_balance</span></div>
+            </div>
+            <h3 class="h2 mb-0">${{ "%.2f"|format(trip.get_total_budget()) }}</h3>
+        </div>
+
+        {% set total_actual = trip.get_total_actual_cost() %}
+        {% set total_planned = trip.get_total_budget() %}
+        <div class="card stat-card p-6 border-left-secondary">
+            <div class="d-flex justify-between align-start mb-2">
+                <p class="text-xs text-uppercase text-gray fw-bold">Actual Spend</p>
+                <div class="icon-circle bg-secondary-light text-secondary"><span class="icon">receipt_long</span></div>
+            </div>
+            <h3 class="h2 mb-0 {{ 'text-danger' if total_actual > total_planned else 'text-dark' }}">
+                ${{ "%.2f"|format(total_actual) }}
+            </h3>
+        </div>
+
+        <div class="card stat-card p-6 border-left-accent">
+            {% set diff = total_planned - total_actual %}
+            <div class="d-flex justify-between align-start mb-2">
+                <p class="text-xs text-uppercase text-gray fw-bold">Remaining</p>
+                <div class="icon-circle bg-accent-light text-accent"><span class="icon">savings</span></div>
+            </div>
+            <h3 class="h2 mb-0 {{ 'text-success' if diff >= 0 else 'text-danger' }}">
+                {{ "+" if diff > 0 }}${{ "%.2f"|format(diff) }}
+            </h3>
+        </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem;">
+        <!-- Budget Form -->
+        <div class="card p-6">
+            <h3 class="h4 mb-6">Budget Allocation</h3>
+            <form method="POST">
+                <div class="overflow-auto">
+                    <table class="table w-100">
+                        <thead>
+                            <tr class="text-left border-bottom">
+                                <th class="pb-3 text-gray text-xs uppercase">Category</th>
+                                <th class="pb-3 text-gray text-xs uppercase" width="140">Estimated ($)</th>
+                                <th class="pb-3 text-gray text-xs uppercase" width="140">Actual ($)</th>
+                                <th class="pb-3 text-gray text-xs uppercase text-right">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in trip.budget_items %}
+                            <tr class="border-bottom">
+                                <td class="py-4 fw-bold">{{ item.category }}</td>
+                                <td class="py-4">
+                                    <input type="number" step="0.01" name="estimated_{{ item.id }}"
+                                        value="{{ item.estimated_amount }}" class="form-input text-right"
+                                        style="padding: 0.5rem;">
+                                </td>
+                                <td class="py-4">
+                                    <input type="number" step="0.01" name="actual_{{ item.id }}"
+                                        value="{{ item.actual_amount }}" class="form-input text-right"
+                                        style="padding: 0.5rem;">
+                                </td>
+                                <td class="py-4 text-right">
+                                    {% set item_diff = item.estimated_amount - item.actual_amount %}
+                                    <span class="badge {{ 'badge-success' if item_diff >= 0 else 'badge-warning' }}">
+                                        {{ "+" if item_diff > 0 }}{{ "%.2f"|format(item_diff) }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 text-right">
+                    <button type="submit" class="btn btn-primary">Update Budget</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Charts -->
+        <div class="d-flex flex-column gap-6">
+            <div class="card p-6">
+                <h3 class="h5 mb-4">Allocation Mix</h3>
+                <div style="height: 250px;">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card p-6 bg-primary text-white">
+                <h3 class="h6 mb-2 text-white opacity-90">Live Activity Costs</h3>
+                <p class="text-sm opacity-70 mb-4">Total deduced from activities added to your itinerary.</p>
+                <h2 class="h2 mb-0 text-white">${{ "%.2f"|format(trip.get_total_activity_costs()) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .icon-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-accent-light {
+        background: #fee2e2;
+    }
+
+    /* Example */
+
+    @media (max-width: 900px) {
+        .grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+        const labels = [{% for item in trip.budget_items %}"{{ item.category }}", {% endfor %}];
+    const data = [{% for item in trip.budget_items %}{ { item.estimated_amount } }, {% endfor %}];
+
+    if (labels.length > 0) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, padding: 20 } }
+                }
+            }
+        });
+    }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}My Trips - GlobeTrotter{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="d-flex justify-between align-center mb-8">
+        <div>
+            <h1 class="h2 mb-2">My Trips</h1>
+            <p class="text-gray">Manage your planned adventures and past expeditions.</p>
+        </div>
+        <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary">
+            <span class="icon">add_circle</span> Create New Trip
+        </a>
+    </div>
+
+    {% if trips %}
+    <div class="grid grid-auto-fill gap-6">
+        {% for trip in trips %}
+        <div class="card trip-card d-flex flex-column h-100 hover-elevate transition">
+            <div class="position-relative">
+                {% if trip.cover_photo %}
+                <img src="{{ trip.cover_photo }}" alt="{{ trip.name }}" class="trip-card-image" style="height: 200px; width: 100%; object-fit: cover;">
+                {% else %}
+                <div class="trip-card-image bg-gray-200 d-flex align-center justify-center text-gray-400" style="height: 200px;">
+                    <span class="icon icon-xl">flight</span>
+                </div>
+                {% endif %}
+                
+                <div class="position-absolute top-0 right-0 p-3">
+                    {% if trip.is_public %}
+                    <span class="badge badge-success shadow-sm">Public</span>
+                    {% else %}
+                    <span class="badge badge-secondary shadow-sm">Private</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body d-flex flex-column flex-1">
+                <h3 class="h4 mb-2">
+                    <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="text-dark hover-text-primary" style="text-decoration: none;">
+                        {{ trip.name }}
+                    </a>
+                </h3>
+                
+                <div class="d-flex align-center gap-3 text-sm text-gray mb-4">
+                    <span class="d-flex align-center gap-1">
+                        <span class="icon icon-sm">calendar_today</span>
+                        {% if trip.start_date %}{{ trip.start_date.strftime('%b %d, %Y') }}{% else %}Planning{% endif %}
+                    </span>
+                    <span>•</span>
+                    <span class="d-flex align-center gap-1">
+                        <span class="icon icon-sm">place</span>
+                        {{ trip.stops|length }} Stops
+                    </span>
+                </div>
+
+                <p class="text-gray text-sm mb-4 flex-1 line-clamp-2">
+                    {{ trip.description or "No description provided." }}
+                </p>
+
+                <div class="d-flex justify-between align-center pt-4 border-top">
+                    <div class="d-flex align-center gap-2">
+                         <div class="avatar-xs bg-primary text-white">{{ trip.user.username[0]|upper }}</div>
+                         <span class="text-xs text-gray fw-bold">Owner</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('trips.edit_trip', trip_id=trip.id) }}" class="btn btn-ghost btn-sm btn-icon" title="Edit">
+                            <span class="icon icon-sm">edit</span>
+                        </a>
+                        <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-outline btn-sm">
+                            View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card p-10 text-center animate-fade-in-up">
+        <div class="mb-6 d-inline-flex justify-center align-center rounded-full bg-primary-light bg-opacity-10 p-6">
+            <span class="icon text-primary" style="font-size: 3rem;">travel_explore</span>
+        </div>
+        <h2 class="h3 mb-3">No Trips Yet</h2>
+        <p class="text-gray mb-8 max-w-md mx-auto">Your adventure awaits! Create your first trip plan to start tracking destinations, budgets, and itineraries.</p>
+        <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary btn-lg">
+            Start Planning
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

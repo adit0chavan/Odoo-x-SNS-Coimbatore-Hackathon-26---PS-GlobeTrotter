@@ -1,0 +1,189 @@
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="{{ url_for('trips.dashboard') if current_user.is_authenticated else url_for('auth.login') }}"
+            class="nav-logo">
+            <span class="icon">public</span>
+            <span class="logo-text">GlobeTrotter</span>
+        </a>
+
+        <div class="nav-links-wrapper d-flex align-center gap-4">
+            {% if current_user.is_authenticated %}
+            <div class="nav-links d-flex align-center gap-2">
+                <a href="{{ url_for('trips.dashboard') }}"
+                    class="nav-link {{ 'active' if request.endpoint == 'trips.dashboard' }}">
+                    <span class="icon icon-sm">dashboard</span> Dashboard
+                </a>
+                <a href="{{ url_for('community.index') }}"
+                    class="nav-link {{ 'active' if request.blueprint == 'community' }}">
+                    <span class="icon icon-sm">groups</span> Community
+                </a>
+                <a href="{{ url_for('trips.list_trips') }}"
+                    class="nav-link {{ 'active' if request.endpoint == 'trips.list_trips' }}">
+                    <span class="icon icon-sm">inventory_2</span> My Trips
+                </a>
+                <a href="{{ url_for('profile.view') }}"
+                    class="nav-link {{ 'active' if request.blueprint == 'profile' }}">
+                    <span class="icon icon-sm">account_circle</span> Profile
+                </a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.dashboard') }}"
+                    class="nav-link admin-link {{ 'active' if request.blueprint == 'admin' }}">
+                    <span class="icon icon-sm">admin_panel_settings</span> <span class="admin-badge">Admin</span>
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="nav-divider"></div>
+
+            <div class="nav-actions d-flex align-center gap-3">
+
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-icon" title="Logout">
+                    <span class="icon">logout</span>
+                </a>
+            </div>
+            {% else %}
+            <div class="nav-links d-flex align-center gap-4">
+                <a href="{{ url_for('auth.login') }}" class="nav-link">Sign In</a>
+                <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-sm">Join Now</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+            <span class="icon">menu</span>
+        </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    {% if current_user.is_authenticated %}
+    <div class="nav-mobile-menu" id="navMobileMenu">
+        <div class="nav-mobile-links">
+            <a href="{{ url_for('trips.dashboard') }}" class="nav-mobile-link">
+                <span class="icon">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('community.index') }}" class="nav-mobile-link">
+                <span class="icon">groups</span>
+                <span>Community</span>
+            </a>
+            <a href="{{ url_for('trips.list_trips') }}" class="nav-mobile-link">
+                <span class="icon">inventory_2</span>
+                <span>My Trips</span>
+            </a>
+            <a href="{{ url_for('profile.view') }}" class="nav-mobile-link">
+                <span class="icon">account_circle</span>
+                <span>Profile</span>
+            </a>
+
+            <div class="nav-mobile-divider"></div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-mobile-link text-danger">
+                <span class="icon">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</nav>
+
+<style>
+    .nav-divider {
+        height: 24px;
+        width: 1px;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-link {
+        color: var(--accent) !important;
+        background: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    .admin-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Mobile Menu Styles */
+    .nav-mobile-menu {
+        display: none;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid var(--glass-border);
+        padding: 1rem;
+        animation: slideInDown 0.3s ease-out;
+    }
+
+    .nav-mobile-menu.active {
+        display: block;
+    }
+
+    .nav-mobile-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-mobile-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        color: var(--text-gray);
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .nav-mobile-link:hover {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
+    }
+
+    .nav-mobile-divider {
+        height: 1px;
+        background: var(--gray-200);
+        margin: 0.5rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .nav-links-wrapper {
+            display: none;
+        }
+
+        .nav-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-toggle:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+    }
+</style>
+
+<script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function () {
+        const navToggle = document.getElementById('navToggle');
+        const navMobileMenu = document.getElementById('navMobileMenu');
+
+        if (navToggle && navMobileMenu) {
+            navToggle.addEventListener('click', function () {
+                navMobileMenu.classList.toggle('active');
+                const icon = navToggle.querySelector('.icon');
+                icon.textContent = navMobileMenu.classList.contains('active') ? 'close' : 'menu';
+            });
+        }
+    });
+</script>

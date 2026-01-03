@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - GlobeTrotter{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <!-- Profile Header -->
+    <div class="card p-8 mb-8 d-flex flex-column flex-md-row align-center gap-6">
+        <div class="position-relative">
+            <img src="{{ current_user.profile_pic }}" alt="{{ current_user.username }}"
+                class="rounded-full border-4 border-white shadow-lg"
+                style="width: 120px; height: 120px; object-fit: cover;">
+        </div>
+
+        <div class="flex-1 text-center text-md-left">
+            <div class="d-flex flex-column flex-md-row justify-between align-center mb-2">
+                <div>
+                    <h1 class="h2 mb-1">{{ current_user.full_name or current_user.username }}</h1>
+                    <p class="text-gray">@{{ current_user.username }} • Joined {{ current_user.created_at.strftime('%B
+                        %Y') }}</p>
+                </div>
+                <div class="mt-4 mt-md-0">
+                    <a href="{{ url_for('profile.edit') }}" class="btn btn-outline">
+                        <span class="icon">edit</span> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <p class="text-gray mb-0 max-w-2xl">
+                {{ current_user.bio or "No bio added yet." }}
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+        <!-- Stats Column -->
+        <div class="d-flex flex-column gap-6">
+            <div class="card p-6">
+                <h3 class="h5 mb-4 border-bottom pb-2 text-gray text-xs uppercase fw-bold">Travel Stats</h3>
+                <div class="d-flex flex-column gap-4">
+                    <div class="d-flex justify-between align-center">
+                        <span class="text-gray">Total Trips</span>
+                        <span class="fw-bold text-lg">{{ current_user.trips|length }}</span>
+                    </div>
+                    {% set stops_count = 0 %}
+                    {% for trip in current_user.trips %}{% set stops_count = stops_count + trip.stops|length %}{% endfor
+                    %}
+                    <div class="d-flex justify-between align-center">
+                        <span class="text-gray">Places Visited</span>
+                        <span class="fw-bold text-lg">{{ stops_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="h5 mb-4 border-bottom pb-2 text-gray text-xs uppercase fw-bold">Personal Details</h3>
+                <div class="mb-3">
+                    <label class="d-block text-xs text-uppercase text-gray fw-bold mb-1">Email</label>
+                    <p class="mb-0">{{ current_user.email }}</p>
+                </div>
+                <div class="mb-0">
+                    <label class="d-block text-xs text-uppercase text-gray fw-bold mb-1">Language</label>
+                    <p class="mb-0 text-capitalize">{{ 'English' if current_user.language == 'en' else
+                        current_user.language }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity / Trips -->
+        <div class="col-span-2">
+            <div class="card p-6">
+                <div class="d-flex justify-between align-center mb-6">
+                    <h3 class="h4 mb-0">Recent Activity</h3>
+                    <a href="{{ url_for('trips.list_trips') }}" class="text-primary text-sm fw-bold hover-underline"
+                        style="text-decoration: none;">View All Trips</a>
+                </div>
+
+                {% if current_user.trips %}
+                <div class="d-flex flex-column gap-4">
+                    {% for trip in current_user.trips[:3] %}
+                    <div class="p-4 rounded border hover-bg-gray-50 transition d-flex justify-between align-center">
+                        <div class="d-flex align-center gap-4">
+                            <div class="rounded bg-primary-light bg-opacity-10 p-3 text-primary">
+                                <span class="icon">flight_takeoff</span>
+                            </div>
+                            <div>
+                                <h4 class="h6 mb-1"><a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}"
+                                        class="text-dark">{{ trip.name }}</a></h4>
+                                <span class="text-xs text-gray uppercase">{{ trip.start_date.strftime('%b %Y') if
+                                    trip.start_date else 'Planned' }} • {{ trip.stops|length }} Stops</span>
+                            </div>
+                        </div>
+                        <span class="badge {{ 'badge-success' if trip.is_public else 'badge-secondary' }}">
+                            {{ 'Public' if trip.is_public else 'Private' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray">No activity recorded yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .max-w-2xl {
+        max-width: 42rem;
+    }
+
+    @media (max-width: 768px) {
+        .grid-cols-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .col-span-2 {
+            grid-column: span 1;
+        }
+    }
+</style>
+{% endblock %}

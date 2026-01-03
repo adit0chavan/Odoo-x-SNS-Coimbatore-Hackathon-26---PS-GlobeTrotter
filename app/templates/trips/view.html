@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}{{ trip.name }} - GlobeTrotter Plan{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <!-- Trip Header -->
+    <div class="card p-8 mb-8 overflow-hidden position-relative border-0 shadow-lg">
+        <div class="position-relative z-1">
+            <div class="d-flex align-center gap-3 mb-4">
+                <span class="badge badge-primary">Trip Plan</span>
+                {% if trip.is_public %}
+                <span class="badge badge-success">Public</span>
+                {% else %}
+                <span class="badge badge-secondary">Private</span>
+                {% endif %}
+            </div>
+
+            <h1 class="h1 mb-3">{{ trip.name }}</h1>
+
+            <div class="d-flex align-center gap-6 text-gray fw-medium">
+                <div class="d-flex align-center gap-2">
+                    <span class="icon text-primary">event_note</span>
+                    {% if trip.start_date and trip.end_date %}
+                    {{ trip.start_date.strftime('%b %d') }} — {{ trip.end_date.strftime('%b %d, %Y') }}
+                    {% else %}
+                    Dates TBD
+                    {% endif %}
+                </div>
+                <div class="d-flex align-center gap-2">
+                    <span class="icon text-primary">place</span>
+                    {{ trip.stops|length }} Stops
+                </div>
+            </div>
+
+            <div class="mt-8 d-flex flex-wrap gap-3">
+                {% if is_shared_view %}
+                <form action="{{ url_for('trips.copy_trip', trip_id=trip.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="icon">content_copy</span> Copy to My Trips
+                    </button>
+                </form>
+                {% else %}
+                <form action="{{ url_for('trips.toggle_public', trip_id=trip.id) }}" method="POST">
+                    <button type="submit" class="btn btn-outline" title="Toggle Community Sharing">
+                        <span class="icon">{{ 'public_off' if trip.is_public else 'public' }}</span>
+                        {{ 'Remove from Community' if trip.is_public else 'Add to Community' }}
+                    </button>
+                </form>
+                <a href="{{ url_for('trips.view_timeline', trip_id=trip.id) }}" class="btn btn-outline">
+                    <span class="icon">timeline</span> Timeline
+                </a>
+                <a href="{{ url_for('trips.edit_trip', trip_id=trip.id) }}" class="btn btn-outline btn-icon"
+                    title="Edit Trip Details">
+                    <span class="icon">edit</span>
+                </a>
+                <button onclick="toggleAddStop()" class="btn btn-primary">
+                    <span class="icon">add_location_alt</span> Add Stop
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Abstract Background Decoration -->
+        <div
+            style="position: absolute; top: 0; right: 0; bottom: 0; width: 40%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(79, 70, 229, 0.05) 100%); pointer-events: none;">
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="card stat-card p-6 border-left-primary">
+            <div class="d-flex justify-between align-start mb-2">
+                <p class="text-xs text-uppercase text-gray fw-bold">Estimated Cost</p>
+                <span class="icon text-primary icon-md">payments</span>
+            </div>
+            <h3 class="h3 mb-0">${{ "%.2f"|format(trip.get_total_budget()) }}</h3>
+        </div>
+        <div class="card stat-card p-6 border-left-secondary">
+            <div class="d-flex justify-between align-start mb-2">
+                <p class="text-xs text-uppercase text-gray fw-bold">Actual Spent</p>
+                <span class="icon text-secondary icon-md">receipt</span>
+            </div>
+            <h3 class="h3 mb-0">${{ "%.2f"|format(trip.get_total_actual_cost()) }}</h3>
+        </div>
+        <div class="card stat-card p-6 border-left-accent">
+            <div class="d-flex justify-between align-start mb-2">
+                <p class="text-xs text-uppercase text-gray fw-bold">Duration</p>
+                <span class="icon text-accent icon-md">schedule</span>
+            </div>
+            <h3 class="h3 mb-0">
+                {% if trip.start_date and trip.end_date %}
+                {{ (trip.end_date - trip.start_date).days + 1 }} Days
+                {% else %}
+                --
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+
+    <!-- Description -->
+    {% if trip.description %}
+    <div class="card p-6 mb-8">
+        <h3 class="h5 mb-3">About this Trip</h3>
+        <p class="text-gray" style="line-height: 1.7;">{{ trip.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Add Stop Panel -->
+    <div id="addStopForm" class="card p-6 mb-8 border-primary shadow-lg animate-fade-in-down"
+        style="display: none; border: 2px solid var(--primary-light);">
+        <div class="d-flex justify-between align-center mb-6">
+            <h2 class="h4 mb-0 text-primary">Add New Destination</h2>
+            <button onclick="toggleAddStop()" class="btn btn-ghost btn-icon"><span class="icon">close</span></button>
+        </div>
+        <form method="POST" action="{{ url_for('trips.add_stop', trip_id=trip.id) }}">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" required class="form-input" placeholder="e.g. Kyoto">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Country (Optional)</label>
+                    <input type="text" name="country" class="form-input" placeholder="e.g. Japan">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="form-group">
+                    <label class="form-label">Arrival</label>
+                    <input type="date" name="arrival_date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Departure</label>
+                    <input type="date" name="departure_date" class="form-input">
+                </div>
+            </div>
+            <div class="d-flex justify-end">
+                <button type="submit" class="btn btn-primary">Add Destination</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stops Itinerary -->
+    {% if trip.stops %}
+    <div class="d-flex flex-column gap-6">
+        {% for stop in trip.stops %}
+        <div class="timeline-item">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content card p-0 overflow-hidden">
+                <!-- Stop Header -->
+                <div class="p-6 d-flex justify-between align-center bg-gray-50 border-bottom">
+                    <div>
+                        <div class="d-flex align-center gap-2 mb-1">
+                            <span class="badge badge-primary">Stop {{ loop.index }}</span>
+                            <span class="text-sm text-gray fw-medium">
+                                {% if stop.arrival_date %}{{ stop.arrival_date.strftime('%b %d') }} - {{
+                                stop.departure_date.strftime('%b %d') }}{% else %}Flexible Dates{% endif %}
+                            </span>
+                        </div>
+                        <h2 class="h3 mb-0">{{ stop.city }} <span
+                                class="text-sm text-gray fw-normal text-uppercase ml-2">{{ stop.country }}</span></h2>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button onclick='getRecommendations({{ stop.city | tojson }}, {{ stop.id }})'
+                            class="btn btn-outline btn-sm">
+                            <span class="icon icon-sm">auto_awesome</span> AI Ideas
+                        </button>
+                        <button onclick='toggleAddActivity({{ stop.id }})' class="btn btn-secondary btn-sm">
+                            <span class="icon icon-sm">add</span> Activity
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Panel -->
+                <div id="aiRecs{{ stop.id }}" class="p-6 bg-primary-light bg-opacity-10 border-bottom"
+                    style="display: none;">
+                    <div class="d-flex justify-between align-center mb-4">
+                        <h4 class="h6 mb-0 text-primary d-flex align-center gap-2">
+                            <span class="icon icon-sm">stars</span> Recommendations for {{ stop.city }}
+                        </h4>
+                        <button onclick="closeRecs({{ stop.id }})" class="btn btn-ghost btn-sm p-1 h-auto"><span
+                                class="icon icon-sm">close</span></button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4" id="recGrid{{ stop.id }}">
+                        <div class="col-span-3 text-center py-4">
+                            <div class="spinner spinner-sm mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Activity Panel -->
+                <div id="addActivityForm{{ stop.id }}" class="p-6 bg-gray-50 border-bottom" style="display: none;">
+                    <h4 class="h6 mb-4">Add Activity Concept</h4>
+                    <form method="POST" action="{{ url_for('activities.add_activity', stop_id=stop.id) }}">
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="col-span-2" style="grid-column: span 2;">
+                                <input type="text" name="name" id="actName{{ stop.id }}" placeholder="Activity Name"
+                                    required class="form-input">
+                            </div>
+                            <div>
+                                <select name="category" class="form-select">
+                                    <option value="Sightseeing">Sightseeing</option>
+                                    <option value="Food">Food & Drink</option>
+                                    <option value="Adventure">Adventure</option>
+                                    <option value="Culture">Culture</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <input type="number" name="estimated_cost" placeholder="Cost ($)" step="0.01"
+                                class="form-input">
+                            <input type="date" name="date" class="form-input">
+                        </div>
+                        <textarea name="description" placeholder="Notes..." class="form-textarea mb-4"
+                            style="min-height: 80px;"></textarea>
+                        <div class="d-flex justify-end gap-3">
+                            <button type="button" onclick="toggleAddActivity({{ stop.id }})"
+                                class="btn btn-ghost">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Activity</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Activities List -->
+                <div class="p-2">
+                    {% if stop.activities %}
+                    <div class="d-flex flex-column gap-2">
+                        {% for activity in stop.activities %}
+                        <div
+                            class="p-4 rounded hover-bg-gray-50 transition border-bottom-light d-flex justify-between align-center">
+                            <div class="d-flex align-center gap-4">
+                                <div class="rounded-lg p-2 d-flex align-center justify-center 
+                                    {% if activity.category == 'Food' %}bg-orange-100 text-orange-600
+                                    {% elif activity.category == 'Adventure' %}bg-green-100 text-green-600
+                                    {% elif activity.category == 'Culture' %}bg-purple-100 text-purple-600
+                                    {% else %}bg-blue-100 text-blue-600{% endif %}" style="width: 48px; height: 48px;">
+                                    <span class="icon">
+                                        {% if activity.category == 'Food' %}restaurant
+                                        {% elif activity.category == 'Adventure' %}hiking
+                                        {% elif activity.category == 'Culture' %}museum
+                                        {% else %}local_see{% endif %}
+                                    </span>
+                                </div>
+                                <div>
+                                    <h5 class="h6 mb-1">{{ activity.name }}</h5>
+                                    <div class="d-flex gap-3 text-sm text-gray">
+                                        <span class="fw-bold text-xs uppercase">{{ activity.category }}</span>
+                                        {% if activity.date %}<span>• {{ activity.date.strftime('%B %d') }}</span>{%
+                                        endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-center gap-4">
+                                {% if activity.estimated_cost %}
+                                <div class="text-right">
+                                    <div class="text-xs text-uppercase text-muted fw-bold">Est.</div>
+                                    <div class="fw-bold">${{ "%.2f"|format(activity.estimated_cost) }}</div>
+                                </div>
+                                {% endif %}
+                                <form method="POST"
+                                    action="{{ url_for('activities.delete_activity', activity_id=activity.id) }}">
+                                    <button type="submit" class="btn btn-ghost btn-sm text-danger btn-icon"
+                                        title="Remove" onclick="return confirm('Remove this activity?')">
+                                        <span class="icon icon-sm">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-6 text-center text-muted">
+                        <p class="mb-0 text-sm">No activities planned yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card p-8 text-center bg-gray-50 border-dashed">
+        <div class="mb-4">
+            <span class="icon text-gray-300" style="font-size: 4rem;">map</span>
+        </div>
+        <h3 class="h4 text-gray mb-2">No Destinations Yet</h3>
+        <p class="text-gray mb-6">Start planning your route by adding a city.</p>
+        <button onclick="toggleAddStop()" class="btn btn-primary">Add First Stop</button>
+    </div>
+    {% endif %}
+
+    <!-- Footer Action -->
+    <div class="mt-8 mb-8 text-center">
+        <a href="{{ url_for('trips.manage_budget', trip_id=trip.id) }}" class="btn btn-outline btn-lg">
+            <span class="icon">account_balance_wallet</span> View Full Budget
+        </a>
+    </div>
+</div>
+
+<style>
+    /* Additional specific overrides if needed */
+    .border-left-primary {
+        border-left: 5px solid var(--primary);
+    }
+
+    .border-left-secondary {
+        border-left: 5px solid var(--secondary);
+    }
+
+    .border-left-accent {
+        border-left: 5px solid var(--accent);
+    }
+
+    .bg-orange-100 {
+        background-color: #ffedd5;
+    }
+
+    .text-orange-600 {
+        color: #c2410c;
+    }
+
+    .bg-green-100 {
+        background-color: #dcfce7;
+    }
+
+    .text-green-600 {
+        color: #16a34a;
+    }
+
+    .bg-purple-100 {
+        background-color: #f3e8ff;
+    }
+
+    .text-purple-600 {
+        color: #7e22ce;
+    }
+
+    .bg-blue-100 {
+        background-color: #dbeafe;
+    }
+
+    .text-blue-600 {
+        color: #2563eb;
+    }
+
+    .border-dashed {
+        border: 2px dashed var(--gray-300);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleAddStop() {
+        const el = document.getElementById('addStopForm');
+        const isHidden = el.style.display === 'none';
+        el.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function toggleAddActivity(id) {
+        const el = document.getElementById('addActivityForm' + id);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function closeRecs(id) {
+        document.getElementById('aiRecs' + id).style.display = 'none';
+    }
+
+    async function getRecommendations(city, stopId) {
+        const grid = document.getElementById('recGrid' + stopId);
+        const container = document.getElementById('aiRecs' + stopId);
+        container.style.display = 'block';
+        grid.innerHTML = '<div class="col-span-3 text-center py-4"><div class="spinner spinner-sm mx-auto mb-2"></div><p class="text-sm">Fetching ideas...</p></div>';
+
+        try {
+            const response = await fetch(`/api/itinerary/plan?city=${encodeURIComponent(city)}`);
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                grid.innerHTML = '';
+                data.results.slice(0, 3).forEach(plan => {
+                    const card = document.createElement('div');
+                    card.className = 'card p-4 hover-shadow transition cursor-default';
+                    card.innerHTML = `
+                    <h5 class="h6 mb-2 text-primary">${plan.title}</h5>
+                    <p class="text-sm text-gray mb-3 line-clamp-3">${plan.plan}</p>
+                    <button onclick="addRec('${plan.title.replace(/'/g, "\\'")}', '${plan.plan.replace(/'/g, "\\'").substring(0, 200)}', ${stopId})" class="btn btn-xs btn-outline w-100">Add to Plan</button>
+                    <a href="${plan.source}" target="_blank" class="text-xs text-muted mt-2 d-block text-center hover-text-primary">Source</a>
+                `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = '<div class="col-span-3 text-center py-4"><p class="text-sm text-gray">No specific recommendations found.</p></div>';
+            }
+        } catch (e) {
+            grid.innerHTML = '<div class="col-span-3 text-center py-4"><p class="text-sm text-danger">Error fetching recommendations.</p></div>';
+        }
+    }
+
+    function addRec(name, desc, stopId) {
+        toggleAddActivity(stopId);
+        document.getElementById('actName' + stopId).value = name;
+        document.querySelector('#addActivityForm' + stopId + ' textarea').value = desc;
+        document.getElementById('aiRecs' + stopId).style.display = 'none';
+    }
+
+    function toggleShare() {
+        // Implementation depends on backend route, often a form submission
+        // For demo/prototype this might just toggle visuals, but typically requires a server call.
+        // Assuming button is wrapped in proper handling or we add a form to the button in HTML above.
+        // In the HTML above, I used a button with simple onclick. 
+        // For a real app, this should be a form POST. 
+        // Let's assume there is a route for it.
+        // I'll update the button to be a form for clarity in the final code if needed.
+        // For now, let's just alert.
+        alert('To change privacy settings, please use the Edit Trip page for full settings.');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - GlobeTrotter{% endblock %}
+
+{% block content %}
+<div class="d-flex min-vh-100 bg-white overflow-hidden" style="margin-top: -80px; padding-top: 80px;">
+    <!-- Left Hero Section -->
+    <div
+        class="d-none d-lg-flex flex-1 bg-dark position-relative overflow-hidden align-center justify-center p-10 text-white">
+        <div class="position-absolute top-0 left-0 w-100 h-100"
+            style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.8) 100%), url('https://source.unsplash.com/random/1200x900/?adventure,map') center/cover;">
+        </div>
+
+        <div class="position-relative z-1 max-w-md text-center">
+            <div class="mb-6 d-inline-flex p-4 rounded-full bg-white bg-opacity-10 backdrop-blur">
+                <span class="icon" style="font-size: 3rem;">rocket_launch</span>
+            </div>
+            <h1 class="h1 mb-4">Start Your Adventure</h1>
+            <p class="text-xl opacity-90 mb-8">Join thousands of explorers planning their next big trip. Create
+                itineraries, track expenses, and share your experiences.</p>
+
+            <div class="px-6 py-6 rounded-xl bg-white bg-opacity-10 backdrop-blur text-left">
+                <div class="d-flex align-center gap-4 mb-4">
+                    <span class="icon text-white check-circle">check_circle</span>
+                    <span class="text-lg">Free unlimited trip plans</span>
+                </div>
+                <div class="d-flex align-center gap-4 mb-4">
+                    <span class="icon text-white check-circle">check_circle</span>
+                    <span class="text-lg">AI-powered recommendations</span>
+                </div>
+                <div class="d-flex align-center gap-4">
+                    <span class="icon text-white check-circle">check_circle</span>
+                    <span class="text-lg">Collaboration tools</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Form Section -->
+    <div class="flex-1 d-flex align-center justify-center p-6 p-lg-10">
+        <div class="w-100 max-w-md">
+            <div class="mb-8">
+                <h2 class="h2 mb-2">Create an account</h2>
+                <p class="text-gray">Already have an account? <a href="{{ url_for('auth.login') }}"
+                        class="text-primary fw-bold text-decoration-none">Log in</a></p>
+            </div>
+
+            <form method="POST" class="d-flex flex-column gap-4">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <div class="position-relative">
+                        <span class="icon text-gray position-absolute"
+                            style="left: 1rem; top: 50%; transform: translateY(-50%);">person</span>
+                        <input type="text" id="username" name="username" required class="form-input pl-6"
+                            style="padding-left: 3rem;" placeholder="Choose a username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <div class="position-relative">
+                        <span class="icon text-gray position-absolute"
+                            style="left: 1rem; top: 50%; transform: translateY(-50%);">email</span>
+                        <input type="email" id="email" name="email" required class="form-input pl-6"
+                            style="padding-left: 3rem;" placeholder="name@example.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="position-relative">
+                        <span class="icon text-gray position-absolute"
+                            style="left: 1rem; top: 50%; transform: translateY(-50%);">lock</span>
+                        <input type="password" id="password" name="password" required class="form-input pl-6"
+                            style="padding-left: 3rem;" placeholder="Create a strong password">
+                    </div>
+                    <p class="text-xs text-gray mt-2">Must be at least 8 characters long.</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">Create Account</button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray">By signing up, you agree to our <a href="#"
+                        class="text-muted text-decoration-underline">Terms</a> and <a href="#"
+                        class="text-muted text-decoration-underline">Privacy Policy</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .min-vh-100 {
+        min-height: 100vh;
+    }
+
+    .flex-1 {
+        flex: 1;
+    }
+
+    .bg-dark {
+        background-color: #111827;
+    }
+
+    .max-w-md {
+        max-width: 28rem;
+        width: 100%;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}

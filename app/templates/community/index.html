@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Community - GlobeTrotter Plan{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="d-flex justify-between align-center mb-8 animate-fade-in-up">
+        <div>
+            <h1 class="h2 mb-2">Community Trips</h1>
+            <p class="text-gray">Explore itineraries shared by other travelers and make them your own.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Filter placeholder -->
+            <button class="btn btn-outline btn-sm"><span class="icon">filter_list</span> Filter</button>
+        </div>
+    </div>
+
+    <!-- Trips Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up" style="animation-delay: 0.1s;">
+        {% for trip in trips %}
+        <div class="card hover-elevate transition overflow-hidden d-flex flex-column h-100">
+            <!-- Cover Image -->
+            <div class="position-relative" style="height: 200px;">
+                <img src="{{ trip.cover_photo }}" alt="{{ trip.name }}" class="w-100 h-100 object-cover">
+                <div class="position-absolute top-0 right-0 p-3">
+                    <span class="badge badge-light shadow-sm">{{ trip.stops|length }} Stops</span>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-5 flex-1 d-flex flex-column">
+                <div class="d-flex align-center gap-2 mb-3">
+                    <div class="avatar-xs"
+                        style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+                        {{ trip.user.username[0]|upper }}
+                    </div>
+                    <span class="text-sm fw-medium">{{ trip.user.username }}</span>
+                    <span class="text-xs text-gray ml-auto">{{ trip.created_at.strftime('%b %d') }}</span>
+                </div>
+
+                <h3 class="h4 mb-2">
+                    <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}"
+                        class="text-dark hover-text-primary transition" style="text-decoration: none;">
+                        {{ trip.name }}
+                    </a>
+                </h3>
+
+                <p class="text-gray text-sm mb-4 line-clamp-2">{{ trip.description }}</p>
+
+                <div class="d-flex align-center gap-4 mb-4 text-sm text-gray">
+                    <div class="d-flex align-center gap-1">
+                        <span class="icon icon-sm">calendar_today</span>
+                        <span>{{ (trip.end_date - trip.start_date).days if trip.start_date and trip.end_date else '?' }}
+                            Days</span>
+                    </div>
+                    <div class="d-flex align-center gap-1">
+                        <span class="icon icon-sm">attach_money</span>
+                        <span>${{ "%.0f"|format(trip.get_total_budget()) }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-4 border-top d-flex gap-2">
+                    <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}"
+                        class="btn btn-outline btn-sm flex-1">View</a>
+
+                    {% if current_user.is_authenticated and current_user.id != trip.user_id %}
+                    <form action="{{ url_for('community.clone_trip', trip_id=trip.id) }}" method="POST"
+                        class="d-inline">
+                        <button type="submit" class="btn btn-primary btn-sm" title="Copy to my trips">
+                            <span class="icon">content_copy</span> Copy
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full text-center py-12">
+            <div class="icon text-gray-300 mb-4" style="font-size: 48px;">public_off</div>
+            <h3 class="h4 text-gray">No public trips found yet.</h3>
+            <p class="text-gray">Be the first to share your adventure!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

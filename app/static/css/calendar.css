@@ -1,0 +1,72 @@
+/* Calendar Component */
+.calendar-widget {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px; /* reduced gap for strips */
+    text-align: center;
+}
+
+.calendar-day-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-gray);
+    padding-bottom: 0.5rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm); /* rounded square instead of circle */
+    font-size: 0.875rem;
+    cursor: default;
+    transition: var(--transition);
+    position: relative;
+    z-index: 1;
+}
+
+.calendar-day:hover {
+    background: var(--gray-100);
+}
+
+.calendar-day.today {
+    font-weight: 700;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+/* Trip Strips logic */
+.calendar-day.trip-day {
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-day.trip-start {
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+}
+
+.calendar-day.trip-end {
+    border-top-right-radius: 50%;
+    border-bottom-right-radius: 50%;
+}
+
+.calendar-day.trip-middle {
+    border-radius: 0;
+}

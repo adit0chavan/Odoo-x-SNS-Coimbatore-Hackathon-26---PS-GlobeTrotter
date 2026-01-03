@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Journey Roadmap - {{ trip.name }}{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="d-flex justify-between align-center mb-8">
+        <div>
+            <h1 class="h2 mb-2">Journey Timeline</h1>
+            <p class="text-gray">{{ trip.name }} • {{ trip.stops|length }} Destinations</p>
+        </div>
+        <div class="d-flex gap-3">
+             <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-outline">
+                <span class="icon">list_alt</span> List View
+            </a>
+            <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-secondary">
+                <span class="icon">arrow_back</span> Back to Trip
+            </a>
+        </div>
+    </div>
+
+    {% if trip.stops %}
+    <div class="timeline-container mx-auto" style="max-width: 800px;">
+        <div class="timeline-line"></div>
+        
+        {% for stop in trip.stops %}
+        <div class="timeline-item-lg">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date-label">
+                {% if stop.arrival_date %}
+                <span class="fw-bold d-block text-dark">{{ stop.arrival_date.strftime('%b %d') }}</span>
+                <span class="text-xs text-gray">{{ stop.arrival_date.strftime('%Y') }}</span>
+                {% else %}
+                <span class="text-gray italic">TBD</span>
+                {% endif %}
+            </div>
+            
+            <div class="card p-6 mb-8 hover-elevate transition position-relative">
+                <div class="d-flex justify-between align-start mb-4">
+                    <div>
+                        <h2 class="h3 mb-1">{{ stop.city }}</h2>
+                        <p class="text-primary fw-bold text-sm uppercase">{{ stop.country }}</p>
+                    </div>
+                    <div class="text-gray-300 fw-bold" style="font-size: 2rem; opacity: 0.2;">0{{ loop.index }}</div>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% if stop.activities %}
+                        {% for activity in stop.activities %}
+                        <div class="d-flex align-center gap-3 p-3 rounded bg-gray-50 border-bottom-light">
+                             <div class="icon-circle shadow-sm" style="width: 40px; height: 40px; background: white; color: var(--primary);">
+                                <span class="icon icon-sm">
+                                    {% if activity.category == 'Food' %}restaurant
+                                    {% elif activity.category == 'Adventure' %}hiking
+                                    {% else %}local_activity{% endif %}
+                                </span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="h6 mb-0">{{ activity.name }}</h4>
+                                <span class="text-xs text-gray uppercase fw-bold">{{ activity.category }}</span>
+                            </div>
+                            {% if activity.estimated_cost %}
+                            <div class="badge badge-success bg-opacity-10 text-success">
+                                ${{ "%.0f"|format(activity.estimated_cost) }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 bg-gray-50 rounded border-dashed">
+                            <p class="text-sm text-gray mb-0">No activities planned.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div class="timeline-end"></div>
+    </div>
+    {% else %}
+    <div class="card p-10 text-center">
+        <div class="mb-6">
+            <span class="icon text-gray-300" style="font-size: 4rem;">timeline</span>
+        </div>
+        <h2 class="h3 mb-3">Timeline Empty</h2>
+        <p class="text-gray mb-6">Add stops to your trip to generate a timeline.</p>
+        <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-primary">Go to Trip Details</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.timeline-container {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 80px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--gray-200);
+}
+
+.timeline-item-lg {
+    position: relative;
+    padding-left: 120px;
+}
+
+.timeline-date-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 60px;
+    text-align: right;
+    padding-top: 1.5rem;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 74px; /* 80px line - 6px half width */
+    top: 2rem;
+    width: 14px;
+    height: 14px;
+    background: var(--primary);
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--primary-light);
+    z-index: 10;
+}
+
+.timeline-end {
+    position: absolute;
+    left: 76px;
+    bottom: 0;
+    width: 10px;
+    height: 10px;
+    background: var(--gray-300);
+    border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+    .timeline-line { left: 20px; }
+    .timeline-item-lg { padding-left: 50px; }
+    .timeline-date-label { 
+        position: relative; 
+        left: 0; 
+        width: auto; 
+        text-align: left; 
+        margin-bottom: 0.5rem; 
+        padding-top: 0;
+    }
+    .timeline-dot { left: 14px; top: 5px; }
+    .timeline-container { padding-left: 1rem; }
+}
+</style>
+{% endblock %}

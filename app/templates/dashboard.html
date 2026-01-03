@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - GlobeTrotter Plan{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    {% if not trips %}
+    <!-- Zero State / Welcome -->
+    <div class="d-flex flex-column align-center justify-center text-center py-8 mb-8 animate-fade-in-up">
+        <h1 class="h1 mb-4" style="max-width: 800px;">The World is Waiting.</h1>
+        <p class="text-xl text-gray mb-8" style="max-width: 600px;">
+            Start your journey today. Discover destinations, plan details, and organize your next adventure with
+            AI-powered insights.
+        </p>
+
+        <div class="w-100" style="max-width: 700px;">
+            <div class="glass-card p-4">
+                <div class="d-flex gap-3">
+                    <div class="flex-1 position-relative">
+                        <span class="icon text-gray position-absolute"
+                            style="left: 1rem; top: 50%; transform: translateY(-50%);">search</span>
+                        <input type="text" id="citySearch" placeholder="Where do you want to go? (e.g. Tokyo, Paris)..."
+                            class="form-input pl-6" style="padding-left: 3rem;">
+                    </div>
+                    <button onclick="performSearch()" class="btn btn-primary">
+                        <span class="icon">explore</span> Discover
+                    </button>
+                </div>
+                <div id="searchResults" class="mt-4 text-left" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Destinations Carousel -->
+    <div class="mb-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="d-flex justify-between align-center mb-6">
+            <div>
+                <h2 class="h3 mb-2">Popular Destinations</h2>
+                <p class="text-gray">Curated experiences for your next trip</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="badge badge-primary active" onclick="filterDestinations('All')">All</button>
+                <button class="badge badge-secondary" onclick="filterDestinations('Classic')">Classic</button>
+                <button class="badge badge-success" onclick="filterDestinations('Nature')">Nature</button>
+                <button class="badge badge-warning" onclick="filterDestinations('Modern')">Modern</button>
+                <button class="badge badge-info" onclick="filterDestinations('Culture')">Culture</button>
+            </div>
+        </div>
+
+        <div class="destinations-scroll-container" id="popularDestinations">
+            <div class="d-flex align-center justify-center w-100 py-8">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Active Dashboard -->
+    <div class="grid" style="grid-template-columns: 1fr 350px; gap: 2rem;">
+        <!-- Left Column -->
+        <div class="animate-fade-in-up">
+            <div class="d-flex justify-between align-center mb-8">
+                <div>
+                    <h1 class="h2 mb-2">Welcome back, {{ current_user.username }}!</h1>
+                    <p class="text-gray">Here is your travel overview and active itineraries.</p>
+                </div>
+                <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary">
+                    <span class="icon">add_circle</span> New Trip
+                </a>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="card stat-card p-6 border-left-primary">
+                    <div class="d-flex justify-between align-start mb-4">
+                        <div class="stat-icon primary">
+                            <span class="icon">flight_takeoff</span>
+                        </div>
+                    </div>
+                    <h3 class="h2 mb-1">{{ trips|length }}</h3>
+                    <p class="text-gray text-sm uppercase fw-bold">Active Trips</p>
+                </div>
+
+                <div class="card stat-card p-6 border-left-secondary">
+                    {% set total_budget = 0 %}
+                    {% for trip in trips %}{% set total_budget = total_budget + trip.get_total_budget() %}{% endfor %}
+                    <div class="d-flex justify-between align-start mb-4">
+                        <div class="stat-icon secondary">
+                            <span class="icon">account_balance_wallet</span>
+                        </div>
+                        <span class="badge badge-secondary">Budget</span>
+                    </div>
+                    <h3 class="h2 mb-1">${{ "%.2f"|format(total_budget) }}</h3>
+                    <p class="text-gray text-sm uppercase fw-bold">Total Planned</p>
+                </div>
+            </div>
+
+            <!-- Calendar & Travel Operations -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Calendar Widget -->
+                <div class="calendar-widget card p-0 border-0 overflow-hidden">
+                    <div class="p-4 border-bottom d-flex justify-between align-center bg-gray-50">
+                        <h3 class="h5 mb-0">Trip Calendar</h3>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-ghost btn-icon btn-sm" onclick="changeMonth(-1)"><span
+                                    class="icon">chevron_left</span></button>
+                            <span class="fw-bold text-sm" id="currentMonthDisplay">January 2026</span>
+                            <button class="btn btn-ghost btn-icon btn-sm" onclick="changeMonth(1)"><span
+                                    class="icon">chevron_right</span></button>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="calendar-grid mb-2">
+                            <div class="calendar-day-header">Su</div>
+                            <div class="calendar-day-header">Mo</div>
+                            <div class="calendar-day-header">Tu</div>
+                            <div class="calendar-day-header">We</div>
+                            <div class="calendar-day-header">Th</div>
+                            <div class="calendar-day-header">Fr</div>
+                            <div class="calendar-day-header">Sa</div>
+                        </div>
+                        <div id="calendarDays" class="calendar-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Top Suggestions -->
+                <div class="card p-6 bg-gradient-light d-flex flex-column">
+                    <div class="d-flex align-center gap-2 mb-4">
+                        <div class="p-2 rounded bg-white text-primary shadow-sm">
+                            <span class="icon">recommend</span>
+                        </div>
+                        <h3 class="h5 mb-0">Top Places to Visit</h3>
+                    </div>
+                    <div id="dashboardSuggestions" class="d-flex flex-column gap-3 flex-1 overflow-auto"
+                        style="max-height: 300px;">
+                        <div class="skeleton" style="height: 60px;"></div>
+                        <div class="skeleton" style="height: 60px;"></div>
+                        <div class="skeleton" style="height: 60px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Trips -->
+            <div class="d-flex justify-between align-center mb-6">
+                <h3 class="h4">Your Itineraries</h3>
+                <a href="{{ url_for('trips.list_trips') }}" class="text-primary fw-bold text-sm"
+                    style="text-decoration: none;">View All &rarr;</a>
+            </div>
+
+            <div class="d-flex flex-column gap-4">
+                {% for trip in trips[:3] %}
+                <div class="card hover-elevate p-6 d-flex justify-between align-center transition">
+                    <div class="d-flex align-center gap-4">
+                        <div class="trip-icon rounded-lg d-flex align-center justify-center"
+                            style="width: 56px; height: 56px; background: var(--gray-100); color: var(--primary);">
+                            <span class="icon icon-md">{{ 'public' if trip.is_public else 'lock' }}</span>
+                        </div>
+                        <div>
+                            <h4 class="h5 mb-1"><a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}"
+                                    class="text-dark" style="text-decoration: none;">{{ trip.name }}</a></h4>
+                            <div class="d-flex align-center gap-3 text-sm text-gray">
+                                <span class="d-flex align-center gap-1"><span class="icon icon-sm">place</span> {{
+                                    trip.stops|length }} Stops</span>
+                                <span>&bull;</span>
+                                <span class="d-flex align-center gap-1"><span class="icon icon-sm">event</span> {{
+                                    trip.start_date.strftime('%b %d, %Y') if trip.start_date else 'No Date'
+                                    }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('trips.edit_trip', trip_id=trip.id) }}" class="btn btn-ghost btn-sm">
+                            <span class="icon icon-sm">edit</span>
+                        </a>
+                        <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-outline btn-sm">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Search -->
+        <div class="card p-8 bg-gradient-light mb-8">
+            <h3 class="h4 mb-4">Discover Somewhere New</h3>
+            <div class="position-relative">
+                <span class="icon text-gray position-absolute"
+                    style="left: 1rem; top: 50%; transform: translateY(-50%);">search</span>
+                <input type="text" id="citySearch" class="form-input pl-6" placeholder="Find your next destination..."
+                    style="padding-left: 3rem;">
+                <button onclick="performSearch()" class="btn btn-primary position-absolute"
+                    style="right: 8px; top: 6px; padding: 0.4rem 1rem;">Go</button>
+            </div>
+            <div id="searchResults" class="mt-4" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Right Column (Sidebar) -->
+    <div class="d-none d-lg-block">
+        <div class="sticky-top" style="top: 100px;">
+            <div class="card p-6 mb-6">
+                <div class="d-flex align-center gap-3 mb-4">
+                    <div class="p-2 rounded bg-primary-light text-primary bg-opacity-10">
+                        <span class="icon">auto_awesome</span>
+                    </div>
+                    <h3 class="h5 mb-0">AI Assistant</h3>
+                </div>
+                <p class="text-sm text-gray mb-4">Trending destinations recommended for you.</p>
+
+                <div id="popularDestinationsSmall" class="d-flex flex-column gap-3">
+                    <!-- Populated via JS -->
+                    <div class="skeleton" style="height: 60px;"></div>
+                    <div class="skeleton" style="height: 60px;"></div>
+                    <div class="skeleton" style="height: 60px;"></div>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h4 class="h6 text-uppercase text-gray text-xs letter-spacing-wider mb-4">Quick Links</h4>
+                <nav class="d-flex flex-column gap-2">
+                    <a href="{{ url_for('profile.view') }}" class="btn btn-ghost justify-start w-100 text-left">
+                        <span class="icon icon-sm mr-2 text-primary">person</span> My Profile
+                    </a>
+                    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-ghost justify-start w-100 text-left">
+                        <span class="icon icon-sm mr-2 text-success">add</span> Create Trip
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin.dashboard') }}"
+                        class="btn btn-ghost justify-start w-100 text-left text-accent">
+                        <span class="icon icon-sm mr-2">admin_panel_settings</span> Admin Panel
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+</div>
+
+<!-- Plan Modal -->
+<div id="planModal" class="modal-backdrop"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div class="modal-content glass-card bg-white p-0 overflow-hidden"
+        style="width: 90%; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-header p-5 border-bottom d-flex justify-between align-center">
+            <h3 class="h4 mb-0" id="modalTitle">Travel Plan</h3>
+            <button onclick="closePlanModal()" class="btn btn-ghost btn-icon"><span class="icon">close</span></button>
+        </div>
+        <div class="modal-body p-6 overflow-auto" id="modalContent">
+            <!-- Content -->
+        </div>
+        <div class="modal-footer p-5 border-top bg-gray-50 d-flex justify-end gap-3">
+            <button onclick="closePlanModal()" class="btn btn-outline">Close</button>
+            <button id="addPlanBtn" class="btn btn-primary">Create Trip from Plan</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPopularDestinations();
+        initCalendar();
+        loadDashboardSuggestions();
+    });
+
+    // Calendar Logic
+    let currentDate = new Date();
+    const trips = [
+        {% for trip in trips %}
+        {
+            name: "{{ trip.name }}",
+            start: new Date("{{ trip.start_date.strftime('%Y-%m-%d') if trip.start_date else '' }}"),
+            end: new Date("{{ trip.end_date.strftime('%Y-%m-%d') if trip.end_date else '' }}"),
+            id: {{ trip.id }}
+        },
+        {% endfor %}
+    ];
+
+    function initCalendar() {
+        renderCalendar(currentDate);
+    }
+
+    function changeMonth(delta) {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar(currentDate);
+    }
+
+    function renderCalendar(date) {
+        const monthDisplay = document.getElementById('currentMonthDisplay');
+        const grid = document.getElementById('calendarDays');
+        
+        if (!grid) return;
+
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDay = firstDay.getDay();
+
+        monthDisplay.textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        grid.innerHTML = '';
+
+        // Empty slots
+        for (let i = 0; i < startingDay; i++) {
+            const slot = document.createElement('div');
+            grid.appendChild(slot);
+        }
+
+        // Days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = day;
+            
+            const currentDayDate = new Date(year, month, day);
+            const today = new Date();
+            
+            // Normalize time to 0
+            currentDayDate.setHours(0,0,0,0);
+            const todayNorm = new Date(today);
+            todayNorm.setHours(0,0,0,0);
+
+            if (currentDayDate.getTime() === todayNorm.getTime()) {
+                dayEl.classList.add('today');
+            }
+
+            // Check for trips
+            // We find the first trip that covers this day
+            const trip = trips.find(t => {
+                if (!t.start) return false;
+                const start = new Date(t.start);
+                const end = t.end ? new Date(t.end) : new Date(t.start);
+                start.setHours(0,0,0,0);
+                end.setHours(23,59,59,999);
+                return currentDayDate >= start && currentDayDate <= end;
+            });
+
+            if (trip) {
+                dayEl.classList.add('trip-day');
+                
+                // Color based on trip ID to be consistent but varied
+                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+                const color = colors[trip.id % colors.length];
+                dayEl.style.backgroundColor = color;
+                dayEl.title = trip.name;
+
+                // Determine shape
+                const start = new Date(trip.start);
+                start.setHours(0,0,0,0);
+                const end = trip.end ? new Date(trip.end) : new Date(trip.start);
+                end.setHours(0,0,0,0);
+                
+                const isStart = currentDayDate.getTime() === start.getTime();
+                const isEnd = currentDayDate.getTime() === end.getTime();
+                
+                if (isStart && isEnd) {
+                    dayEl.style.borderRadius = '50%';
+                } else if (isStart) {
+                    dayEl.classList.add('trip-start');
+                } else if (isEnd) {
+                    dayEl.classList.add('trip-end');
+                } else {
+                    dayEl.classList.add('trip-middle');
+                }
+            }
+
+            grid.appendChild(dayEl);
+        }
+    }
+
+    // Dashboard Suggestions
+    async function loadDashboardSuggestions() {
+        const container = document.getElementById('dashboardSuggestions');
+        if (!container) return;
+
+        try {
+            const response = await fetch('/api/destinations/popular');
+            const data = await response.json();
+            
+            container.innerHTML = '';
+            // Take top 3 different from active trips if possible
+            const suggestions = data.results.slice(0, 4);
+            
+            suggestions.forEach(dest => {
+               const item = document.createElement('div');
+               item.className = 'd-flex align-center gap-3 p-3 rounded bg-white shadow-sm hover-elevate transition cursor-pointer';
+               item.onclick = () => window.location.href = `/trips/create?city=${encodeURIComponent(dest.name)}`;
+               item.innerHTML = `
+                <img src="${dest.image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                <div class="flex-1">
+                    <div class="fw-bold text-dark text-sm">${dest.name}</div>
+                    <div class="text-xs text-gray uppercase">${dest.country}</div>
+                </div>
+                <span class="icon text-primary icon-sm">arrow_forward</span>
+               `;
+               container.appendChild(item);
+            });
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<p class="text-center text-sm text-danger">Could not load suggestions</p>';
+        }
+    }
+
+    let allDestinations = [];
+
+    async function loadPopularDestinations() {
+        try {
+            const response = await fetch('/api/destinations/popular');
+            const data = await response.json();
+            allDestinations = data.results;
+
+            renderDestinations(allDestinations);
+            renderSmallDestinations(allDestinations);
+        } catch (e) {
+            console.error('Error loading library:', e);
+            document.getElementById('popularDestinations').innerHTML = '<p class="text-center w-100 text-danger">Failed to load destinations.</p>';
+        }
+    }
+
+    function renderDestinations(items) {
+        const container = document.getElementById('popularDestinations');
+        if (!container) return;
+
+        container.innerHTML = '';
+        items.forEach(dest => {
+            const card = document.createElement('div');
+            card.className = 'destination-card shadow-lg';
+            card.onclick = () => window.location.href = `/trips/create?city=${encodeURIComponent(dest.name)}`;
+            card.innerHTML = `
+                <img src="${dest.image}" alt="${dest.name}">
+                <div class="destination-info">
+                    <span class="badge badge-light mb-2">${dest.category}</span>
+                    <h3 class="h3 mb-1 text-white">${dest.name}</h3>
+                    <p class="text-sm opacity-90 text-white">${dest.country}</p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function renderSmallDestinations(items) {
+        const container = document.getElementById('popularDestinationsSmall');
+        if (!container) return;
+
+        container.innerHTML = '';
+        items.slice(0, 3).forEach(dest => {
+            const card = document.createElement('div');
+            card.className = 'd-flex align-center gap-3 p-3 rounded hover-bg-gray-50 transition cursor-pointer border';
+            card.onclick = () => window.location.href = `/trips/create?city=${encodeURIComponent(dest.name)}`;
+            card.innerHTML = `
+                <img src="${dest.image}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 0.5rem;">
+                <div class="flex-1">
+                    <div class="fw-bold text-sm mb-0">${dest.name}</div>
+                    <div class="text-xs text-gray uppercase">${dest.country}</div>
+                </div>
+                <span class="icon text-primary icon-sm">add_circle</span>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function filterDestinations(category) {
+        document.querySelectorAll('.badge').forEach(btn => {
+            if (btn.onclick && btn.innerText === category) {
+                btn.classList.add('active'); // Simply visual, implementation depends on CSS
+            } else if (btn.parentElement && btn.parentElement.classList.contains('category-filters')) {
+                // simple logic for now
+            }
+        });
+
+        // Better implementation
+        const buttons = document.querySelectorAll('button[onclick^="filterDestinations"]');
+        buttons.forEach(btn => {
+            if (btn.innerText === category) btn.classList.add('badge-primary');
+            else btn.classList.remove('badge-primary');
+        });
+
+        if (category === 'All') {
+            renderDestinations(allDestinations);
+        } else {
+            const filtered = allDestinations.filter(d => d.category === category);
+            renderDestinations(filtered);
+        }
+    }
+
+    async function handleSearch(query, resultContainerId) {
+        if (!query || query.length < 2) return;
+
+        const container = document.getElementById(resultContainerId);
+        container.style.display = 'block';
+        container.innerHTML = '<div class="text-center py-4"><div class="spinner spinner-sm mx-auto mb-2"></div><p class="text-sm text-gray">Searching...</p></div>';
+
+        try {
+            const response = await fetch(`/api/search/cities?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                container.innerHTML = '<div class="text-xs fw-bold text-gray uppercase mb-3 px-2">Results</div>';
+                data.results.forEach(res => {
+                    const card = document.createElement('div');
+                    card.className = 'card p-3 mb-2 d-flex justify-between align-center cursor-pointer hover-border-primary transition border';
+                    card.onclick = () => showItineraryPlan(res.name);
+                    card.innerHTML = `
+                    <div class="d-flex align-center gap-3">
+                        <span class="icon text-primary">location_on</span>
+                        <div>
+                            <div class="fw-bold text-dark">${res.name}</div>
+                            <div class="text-xs text-gray">Click to view plan</div>
+                        </div>
+                    </div>
+                    <span class="icon text-primary">chevron_right</span>
+                `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p class="text-center py-4 text-gray">No destinations found.</p>';
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="text-center py-4 text-danger">Error searching.</p>';
+        }
+    }
+
+    async function showItineraryPlan(city) {
+        const modal = document.getElementById('planModal');
+        const content = document.getElementById('modalContent');
+        const title = document.getElementById('modalTitle');
+        const addBtn = document.getElementById('addPlanBtn');
+
+        modal.style.display = 'flex';
+        title.innerText = `Thinking about ${city}?`;
+        content.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto mb-4"></div><p class="text-lg">AI is generating a travel plan...</p></div>';
+        addBtn.onclick = () => window.location.href = `/trips/create?city=${encodeURIComponent(city)}`;
+
+        try {
+            const response = await fetch(`/api/itinerary/plan?city=${encodeURIComponent(city)}`);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                content.innerHTML = '';
+                data.results.forEach(plan => {
+                    const section = document.createElement('div');
+                    section.className = 'plan-snippet card bg-gray-50 border-0 p-4 mb-4';
+                    section.innerHTML = `
+                    <h4 class="h6 mb-2 text-primary">${plan.title}</h4>
+                    <p class="text-sm text-gray mb-2">${plan.plan}</p>
+                    <a href="${plan.source}" target="_blank" class="text-xs text-primary d-inline-flex align-center gap-1 hover-underline"><span class="icon icon-sm">open_in_new</span> Read Source</a>
+                `;
+                    content.appendChild(section);
+                });
+            } else {
+                content.innerHTML = '<div class="text-center py-8"><p class="text-lg mb-4">We found this destination, but couldn\'t generate a specific preview plan.</p><p class="text-gray">You can still start your trip planning!</p></div>';
+            }
+        } catch (e) {
+            content.innerHTML = '<p class="text-danger text-center">Failed to fetch plan suggestions.</p>';
+        }
+    }
+
+    function closePlanModal() {
+        document.getElementById('planModal').style.display = 'none';
+    }
+
+    function performSearch() {
+        const q = document.getElementById('citySearch').value;
+        handleSearch(q, 'searchResults');
+    }
+
+    let typingTimer;
+    document.getElementById('citySearch')?.addEventListener('keyup', () => {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(performSearch, 500);
+    });
+</script>
+{% endblock %}
